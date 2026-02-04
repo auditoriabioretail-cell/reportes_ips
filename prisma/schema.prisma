@@ -29,6 +29,7 @@ model ControlLote {
   cantidad_facturas   Decimal?  @db.Decimal(18, 0)
   valor_reclamado     Decimal?  @db.Decimal(18, 0)
   nombre_envio        String    @db.VarChar(50)
+  tipo_envio          String?   @db.VarChar(50)
 
   @@map("control_lotes")
 }

@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const tipo_validacion = searchParams.get("tipo_validacion");
     const origen = searchParams.get("origen");
     const nombre_envio = searchParams.get("nombre_envio");
+    const tipo_envio = searchParams.get("tipo_envio");
 
     // ============================================================
     // FILTROS DE control_lotes (para WHERE directo)
@@ -52,6 +53,11 @@ export async function GET(request: NextRequest) {
     // Nombre envio
     if (nombre_envio && nombre_envio.trim() !== "") {
       lotesFilters.push(`nombre_envio LIKE '%${nombre_envio}%'`);
+    }
+
+    // Tipo envio
+    if (tipo_envio && tipo_envio.trim() !== "") {
+      lotesFilters.push(`tipo_envio = '${tipo_envio}'`);
     }
 
     const lotesWhere = lotesFilters.join(" AND ");
@@ -288,6 +294,22 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           data: result.map((item) => item.nombre_ips),
+        });
+      }
+
+      case "tipos_envio": {
+        const query = `
+          SELECT DISTINCT tipo_envio
+          FROM control_lotes
+          WHERE tipo_envio IS NOT NULL AND tipo_envio != ''
+          ORDER BY tipo_envio
+        `;
+
+        const result = await prisma.$queryRawUnsafe<any[]>(query);
+
+        return NextResponse.json({
+          success: true,
+          data: result.map((item) => item.tipo_envio),
         });
       }
 

@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     const fecha_fin = searchParams.get("fecha_fin");
     const nombre_ips = searchParams.get("nombre_ips");
     const nombre_envio = searchParams.get("nombre_envio");
+    const tipo_envio = searchParams.get("tipo_envio");
 
     const skip = (page - 1) * limit;
 
@@ -57,6 +58,11 @@ export async function GET(request: NextRequest) {
     // Nombre envio
     if (nombre_envio && nombre_envio.trim() !== "") {
       lotesFilters.push(`nombre_envio LIKE '%${nombre_envio}%'`);
+    }
+
+    // Tipo envio
+    if (tipo_envio && tipo_envio.trim() !== "") {
+      lotesFilters.push(`tipo_envio = '${tipo_envio}'`);
     }
 
     const lotesWhere = lotesFilters.join(" AND ");

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -22,7 +22,8 @@ export async function PATCH(
       );
     }
 
-    const envioId = parseInt(params.id);
+    const { id } = await params;
+    const envioId = parseInt(id);
     if (isNaN(envioId)) {
       return NextResponse.json(
         { error: "ID de envío inválido" },

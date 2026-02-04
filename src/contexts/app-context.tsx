@@ -14,6 +14,7 @@ export interface FilterValues {
   tipo_validacion?: string;
   origen?: string;
   lote_de_carga?: string;
+  tipo_envio?: string;
 }
 
 interface AppContextType {

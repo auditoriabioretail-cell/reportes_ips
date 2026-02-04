@@ -47,6 +47,7 @@ export function DynamicFilters({ onFiltersChange, showLoteFilter = true }: Dynam
   const [filters, setFilters] = useState<FilterValues>({
     fecha_inicio: format(thirtyDaysAgo, "yyyy-MM-dd"),
     fecha_fin: format(today, "yyyy-MM-dd"),
+    tipo_envio: "Primera vez",
   });
 
   const [ipsSearch, setIpsSearch] = useState("");
@@ -79,6 +80,15 @@ export function DynamicFilters({ onFiltersChange, showLoteFilter = true }: Dynam
     queryKey: ["origenes"],
     queryFn: async () => {
       const res = await fetch("/api/reportes?tipo=origenes");
+      const json = await res.json();
+      return (json.data || []) as string[];
+    },
+  });
+
+  const { data: tiposEnvio } = useQuery({
+    queryKey: ["tipos_envio"],
+    queryFn: async () => {
+      const res = await fetch("/api/reportes?tipo=tipos_envio");
       const json = await res.json();
       return (json.data || []) as string[];
     },
@@ -143,6 +153,7 @@ export function DynamicFilters({ onFiltersChange, showLoteFilter = true }: Dynam
     const resetFilters: FilterValues = {
       fecha_inicio: format(thirtyDaysAgo, "yyyy-MM-dd"),
       fecha_fin: format(today, "yyyy-MM-dd"),
+      tipo_envio: "Primera vez",
     };
     setFilters(resetFilters);
     setIpsSearch("");
@@ -306,6 +317,26 @@ export function DynamicFilters({ onFiltersChange, showLoteFilter = true }: Dynam
                   {origenes?.map((origen) => (
                     <SelectItem key={origen} value={origen} className={`text-base ${textColor}`}>
                       {origen}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tipo Envío */}
+            <div className="space-y-2">
+              <Label className={`text-sm font-medium ${labelColor}`}>Tipo Envío</Label>
+              <Select
+                value={filters.tipo_envio || "Primera vez"}
+                onValueChange={(value) => handleFilterChange("tipo_envio", value)}
+              >
+                <SelectTrigger className={`${inputBg} ${inputText} text-base h-11`}>
+                  <SelectValue placeholder="Primera vez" />
+                </SelectTrigger>
+                <SelectContent className={isLight ? "bg-white border-gray-200" : "bg-[#1a1a2e] border-[#2a2a3e]"}>
+                  {tiposEnvio?.map((tipo) => (
+                    <SelectItem key={tipo} value={tipo} className={`text-base ${textColor}`}>
+                      {tipo}
                     </SelectItem>
                   ))}
                 </SelectContent>
