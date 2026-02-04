@@ -10,6 +10,7 @@ interface PieChart3DProps {
   data: Array<{
     name: string;
     value: number;
+    cantidad?: number;
   }>;
   title?: string;
   themeMode?: ThemeMode;
@@ -22,7 +23,15 @@ export function PieChart3D({ data, title = "Distribución de Hallazgos", themeMo
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return null;
 
+    // Sort by value (descending) and take top 10
     const sortedData = [...data].sort((a, b) => b.value - a.value).slice(0, 10);
+    
+    // Format value for display
+    const formatValue = (v: number) => {
+      if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+      if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
+      return `$${v.toFixed(0)}`;
+    };
     
     // Truncate labels to max 60 chars, split in 2 lines if needed
     const labels = sortedData.map((d) => {
@@ -39,6 +48,7 @@ export function PieChart3D({ data, title = "Distribución de Hallazgos", themeMo
       return d.name.substring(0, 57) + "...";
     });
     const values = sortedData.map((d) => d.value);
+    const cantidades = sortedData.map((d) => d.cantidad || 0);
 
     // FUTURISTIC NEON COLOR PALETTE - Brighter colors
     const colors = [
@@ -54,6 +64,14 @@ export function PieChart3D({ data, title = "Distribución de Hallazgos", themeMo
       "rgba(168, 85, 247, 0.95)",   // Purple
     ];
 
+    // Build hover text for each item
+    const hoverTexts = sortedData.map((d, i) => 
+      `<b>${d.name}</b><br>` +
+      `Valor: ${formatValue(values[i])}<br>` +
+      `Cantidad: ${cantidades[i].toLocaleString()}<br>` +
+      `Porcentaje: %{percent}<extra></extra>`
+    );
+
     return [
       {
         values,
@@ -67,7 +85,7 @@ export function PieChart3D({ data, title = "Distribución de Hallazgos", themeMo
             width: 3,
           },
         },
-        textinfo: "percent+label",
+        textinfo: "percent",
         textposition: "outside",
         textfont: { 
           color: textColor, 
@@ -78,12 +96,25 @@ export function PieChart3D({ data, title = "Distribución de Hallazgos", themeMo
           color: textColor,
           size: 13,
         },
-        hovertemplate: "<b>%{label}</b><br>Cantidad: %{value:,}<br>Porcentaje: %{percent}<extra></extra>",
+        hovertemplate: hoverTexts,
         pull: values.map((_, i) => (i === 0 ? 0.08 : i === 1 ? 0.04 : 0)),
         rotation: 45,
+        customdata: cantidades,
       },
     ];
   }, [data, isLight, textColor]);
+
+  // Calculate total value for center annotation
+  const totalValue = useMemo(() => {
+    if (!data || data.length === 0) return 0;
+    return data.reduce((sum, d) => sum + d.value, 0);
+  }, [data]);
+
+  const formatTotalValue = (v: number) => {
+    if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+    if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
+    return `$${v.toFixed(0)}`;
+  };
 
   if (!chartData) {
     return (
@@ -117,9 +148,9 @@ export function PieChart3D({ data, title = "Distribución de Hallazgos", themeMo
         },
         annotations: [
           {
-            text: "<b>Hallazgos</b>",
+            text: `<b>Total</b><br>${formatTotalValue(totalValue)}`,
             showarrow: false,
-            font: { size: 18, color: textColor, family: "system-ui" },
+            font: { size: 16, color: textColor, family: "system-ui" },
             x: 0.4,
             y: 0.5,
           },

@@ -92,7 +92,7 @@ export default function DetallePage() {
     setPage(1);
   }, [filters]);
 
-  // Build query string using ALL shared filters from context (including nombre_envio)
+  // Build query string using ALL shared filters from context (including nombre_envio and tipo_envio)
   const queryString = useMemo(() => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -107,6 +107,7 @@ export default function DetallePage() {
     if (filters.fecha_fin) params.set("fecha_fin", filters.fecha_fin);
     if (filters.nombre_ips) params.set("nombre_ips", filters.nombre_ips);
     if (filters.nombre_envio) params.set("nombre_envio", filters.nombre_envio);
+    if (filters.tipo_envio) params.set("tipo_envio", filters.tipo_envio);
     return params.toString();
   }, [page, search, filters]);
 

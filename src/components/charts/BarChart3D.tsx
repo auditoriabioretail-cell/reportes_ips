@@ -24,8 +24,11 @@ export function BarChart3D({ data, title = "Distribución por Tipo de Validació
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return null;
 
+    // Sort by valor (descending) and take top 12
+    const sortedData = [...data].sort((a, b) => b.valor - a.valor).slice(0, 12);
+
     // Truncate labels - max 60 chars, split in 2 lines if needed
-    const labels = data.slice(0, 12).map((d) => {
+    const labels = sortedData.map((d) => {
       if (d.name.length <= 30) return d.name;
       if (d.name.length <= 60) {
         const mid = Math.ceil(d.name.length / 2);
@@ -37,8 +40,16 @@ export function BarChart3D({ data, title = "Distribución por Tipo de Validació
       }
       return d.name.substring(0, 57) + "...";
     });
-    const cantidades = data.slice(0, 12).map((d) => d.cantidad);
-    const valores = data.slice(0, 12).map((d) => d.valor / 1000000);
+    const cantidades = sortedData.map((d) => d.cantidad);
+    const valores = sortedData.map((d) => d.valor);
+    const valoresMillones = sortedData.map((d) => d.valor / 1000000);
+
+    // Format value for display
+    const formatValue = (v: number) => {
+      if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+      if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
+      return `$${v.toFixed(0)}`;
+    };
 
     // FUTURISTIC GRADIENT COLORS - Neon effect
     const colors = cantidades.map((_, i) => {
@@ -53,8 +64,9 @@ export function BarChart3D({ data, title = "Distribución por Tipo de Validació
     return [
       {
         x: labels,
-        y: cantidades,
+        y: valoresMillones,
         type: "bar" as const,
+        name: "Valor",
         marker: {
           color: colors,
           line: {
@@ -62,10 +74,15 @@ export function BarChart3D({ data, title = "Distribución por Tipo de Validació
             width: 1.5,
           },
         },
-        text: cantidades.map(c => c.toLocaleString()),
+        text: sortedData.map((d, i) => `${formatValue(valores[i])}<br>(${cantidades[i].toLocaleString()})`),
         textposition: "outside" as const,
-        textfont: { color: textColor, size: 13 },
-        hovertemplate: "<b>%{x}</b><br>Cantidad: %{y:,}<extra></extra>",
+        textfont: { color: textColor, size: 11 },
+        hovertemplate: sortedData.map((d, i) => 
+          `<b>${d.name}</b><br>` +
+          `Valor: ${formatValue(valores[i])}<br>` +
+          `Cantidad: ${cantidades[i].toLocaleString()}<extra></extra>`
+        ),
+        customdata: cantidades,
       },
     ];
   }, [data, textColor]);
@@ -93,11 +110,13 @@ export function BarChart3D({ data, title = "Distribución por Tipo de Validació
           automargin: true,
         },
         yaxis: {
-          title: { text: "Cantidad de Hallazgos", font: { size: 15, color: textColor } },
+          title: { text: "Valor (Millones $)", font: { size: 15, color: textColor } },
           tickfont: { size: 13, color: textColor },
           gridcolor: gridColor,
+          tickformat: ",.1f",
+          ticksuffix: "M",
         },
-        margin: { l: 80, r: 40, t: 40, b: 180 },
+        margin: { l: 90, r: 40, t: 40, b: 180 },
         bargap: 0.25,
         hoverlabel: {
           bgcolor: isLight ? "#ffffff" : "#1e1e2e",

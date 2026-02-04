@@ -24,26 +24,37 @@ export function SourceChart3D({ data, title = "Análisis por Fuente/Origen", the
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return null;
 
-    const origenes = data.map((d) => d.origen || "Sin origen");
-    const cantidades = data.map((d) => d.cantidad_hallazgos);
-    const valores = data.map((d) => d.valor_total / 1000000);
+    // Sort by valor_total (descending)
+    const sortedData = [...data].sort((a, b) => b.valor_total - a.valor_total);
+
+    const origenes = sortedData.map((d) => d.origen || "Sin origen");
+    const cantidades = sortedData.map((d) => d.cantidad_hallazgos);
+    const valores = sortedData.map((d) => d.valor_total);
+    const valoresMillones = sortedData.map((d) => d.valor_total / 1000000);
+
+    // Format value for display
+    const formatValue = (v: number) => {
+      if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+      if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
+      return `$${v.toFixed(0)}`;
+    };
 
     // Bubble sizes based on value
-    const maxVal = Math.max(...valores, 1);
-    const sizes = valores.map((v) => 40 + (v / maxVal) * 80);
+    const maxVal = Math.max(...valoresMillones, 1);
+    const sizes = valoresMillones.map((v) => 40 + (v / maxVal) * 80);
 
     return [
       {
         x: origenes,
-        y: cantidades,
+        y: valoresMillones,
         mode: "markers+text" as const,
         type: "scatter" as const,
-        text: cantidades.map(c => c.toLocaleString()),
+        text: sortedData.map((d, i) => `${formatValue(valores[i])}<br>(${cantidades[i].toLocaleString()})`),
         textposition: "top center" as const,
-        textfont: { color: textColor, size: 14, family: "system-ui" },
+        textfont: { color: textColor, size: 12, family: "system-ui" },
         marker: {
           size: sizes,
-          color: valores,
+          color: valoresMillones,
           colorscale: [
             [0, "rgba(147, 51, 234, 0.8)"],     // Vivid Purple
             [0.5, "rgba(236, 72, 153, 0.85)"],  // Pink
@@ -54,13 +65,20 @@ export function SourceChart3D({ data, title = "Análisis por Fuente/Origen", the
             tickfont: { color: textColor, size: 13 },
             bordercolor: "transparent",
             bgcolor: "transparent",
+            tickformat: ",.1f",
+            ticksuffix: "M",
           },
           line: {
             color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.3)",
             width: 2,
           },
         },
-        hovertemplate: "<b>%{x}</b><br>Hallazgos: %{y:,}<br>Valor: $%{marker.color:.2f}M<extra></extra>",
+        hovertemplate: sortedData.map((d, i) => 
+          `<b>${origenes[i]}</b><br>` +
+          `Valor: ${formatValue(valores[i])}<br>` +
+          `Cantidad: ${cantidades[i].toLocaleString()}<extra></extra>`
+        ),
+        customdata: cantidades,
       },
     ];
   }, [data, isLight, textColor]);
@@ -87,11 +105,13 @@ export function SourceChart3D({ data, title = "Análisis por Fuente/Origen", the
           tickangle: -30,
         },
         yaxis: {
-          title: { text: "Cantidad de Hallazgos", font: { size: 16, color: textColor } },
+          title: { text: "Valor (Millones $)", font: { size: 16, color: textColor } },
           tickfont: { size: 14, color: textColor },
           gridcolor: gridColor,
+          tickformat: ",.1f",
+          ticksuffix: "M",
         },
-        margin: { l: 90, r: 130, t: 40, b: 120 },
+        margin: { l: 90, r: 130, t: 60, b: 120 },
         hoverlabel: {
           bgcolor: isLight ? "#ffffff" : "#1e1e2e",
           bordercolor: "#9333EA",

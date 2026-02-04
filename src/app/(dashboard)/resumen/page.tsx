@@ -66,7 +66,7 @@ export default function ResumenPage() {
     }
   };
 
-  // Build query string from ALL filters including nombre_envio
+  // Build query string from ALL filters including nombre_envio and tipo_envio
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
     if (filters.codigo_habilitacion) params.set("codigo_habilitacion", filters.codigo_habilitacion);
@@ -77,6 +77,7 @@ export default function ResumenPage() {
     if (filters.tipo_validacion) params.set("tipo_validacion", filters.tipo_validacion);
     if (filters.origen) params.set("origen", filters.origen);
     if (filters.nombre_envio) params.set("nombre_envio", filters.nombre_envio);
+    if (filters.tipo_envio) params.set("tipo_envio", filters.tipo_envio);
     return params.toString();
   }, [filters]);
 
@@ -172,7 +173,8 @@ export default function ResumenPage() {
 
   const pieChartData = resumenValidacion.map((item) => ({
     name: item.tipo_validacion,
-    value: item.cantidad_registros,
+    value: item.valor_total,
+    cantidad: item.cantidad_registros,
   }));
 
   return (
